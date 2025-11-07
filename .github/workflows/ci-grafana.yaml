@@ -2,9 +2,12 @@ name: CI Build Grafana-OSS
 on:
   push:
     branches: ['main']
+  schedule:
+    - cron: '0 0 7 * *'
   workflow_dispatch:
 jobs:
   build:
+    name: build and push
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -15,14 +18,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Login to ghcr.io
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
       - name: Parse ARGs from Dockerfile
         id: prepare
         shell: bash
@@ -33,32 +40,29 @@ jobs:
           fi
           AL_VER=$(grep -E '^ARG AL_VER=' Dockerfile | head -n 1 | sed 's/^ARG AL_VER=\(.*\)/\1/')
           PD_VER=$(grep -E '^ARG PD_VER=' Dockerfile | head -n 1 | sed 's/^ARG PD_VER=\(.*\)/\1/')
-          PD_NAME=$(grep -E '^ARG PD_NAME=' Dockerfile | head -n 1 | sed 's/^ARG PD_NAME=\(.*\)/\1/')
+          PD_NME=$(grep -E '^ARG PD_NME=' Dockerfile | head -n 1 | sed 's/^ARG PD_NME=\(.*\)/\1/')
           # clean up values
           AL_VER=$(echo "$AL_VER" | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
           PD_VER=$(echo "$PD_VER" | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
-          PD_NAME=$(echo "$PD_NAME" | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
+          PD_NME=$(echo "$PD_NME" | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
           # check if values are empty
-          if [ -z "$AL_VER" ] || [ -z "$PD_VER" ] || [ -z "$PD_NAME" ]; then
+          if [ -z "$AL_VER" ] || [ -z "$PD_VER" ] || [ -z "$PD_NME" ]; then
             echo "AL_VER='${AL_VER}'"
             echo "PD_VER='${PD_VER}'"
-            echo "PD_NAME='${PD_NAME}'"
+            echo "PD_NME='${PD_NME}'"
             exit 1
           fi
           # echo results
           echo "AL_VER='${AL_VER}'"
           echo "PD_VER='${PD_VER}'"
-          echo "PD_NAME='${PD_NAME}'"
+          echo "PD_NME='${PD_NME}'"
           # set outputs
           echo "al_ver=${AL_VER}" >> $GITHUB_OUTPUT
           echo "pd_ver=${PD_VER}" >> $GITHUB_OUTPUT
-          echo "pd_name=${PD_NAME}" >> $GITHUB_OUTPUT
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build and Push "grafana-oss"
+          echo "pd_nme=${PD_NME}" >> $GITHUB_OUTPUT
+      - name: Build and Push Image
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/amd64,linux/arm64
-          file: ./Dockerfile
+          platforms: linux/amd64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ steps.prepare.outputs.pd_name }}:${{ steps.prepare.outputs.pd_ver }}-alpine${{ steps.prepare.outputs.al_ver }}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ steps.prepare.outputs.pd_nme }}:${{ steps.prepare.outputs.pd_ver }}-alpine${{ steps.prepare.outputs.al_ver }}
