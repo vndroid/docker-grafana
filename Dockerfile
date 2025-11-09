@@ -3,7 +3,7 @@ ARG AL_VER=3.21
 ARG PD_VER=12.2.0
 ARG PD_NME=grafana
 
-FROM --platform=$TARGETPLATFORM golang:1.25-alpine3.21 AS go-builder
+FROM golang:1.25-alpine3.21 AS go-builder
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -27,7 +27,7 @@ RUN set -eux \
     && find /root -maxdepth 1 -type d -name ".*" ! -name "." ! -name ".." -exec rm -rf {} + \
     && rm -rf /go/pkg
 
-FROM --platform=$TARGETPLATFORM node:22-alpine3.21 AS js-builder
+FROM node:22-alpine3.21 AS js-builder
 
 ARG JS_YARN_BUILD_FLAG=build
 
@@ -68,7 +68,7 @@ RUN set -eux \
     && yarn ${JS_YARN_BUILD_FLAG} \
     && find /root -maxdepth 1 -type d -name ".*" ! -name "." ! -name ".." -exec rm -rf {} +
 
-FROM --platform=$TARGETPLATFORM alpine:3.21
+FROM alpine:3.21
 
 LABEL maintainer="Grafana Labs <hello@grafana.com>"
 LABEL org.opencontainers.image.source="https://github.com/grafana/grafana"
