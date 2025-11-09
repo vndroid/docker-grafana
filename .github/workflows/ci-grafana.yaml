@@ -5,31 +5,24 @@ on:
   schedule:
     - cron: '0 0 7 * *'
   workflow_dispatch:
+env:
+  REGISTRY: ghcr.io
+  BASE_IMAGE: alpine
 jobs:
-  build:
-    name: build and push
-    runs-on: ubuntu-24.04
+  prepare:
+    name: Parse ARGs
+    runs-on: ubuntu-slim
     permissions:
       contents: read
-      packages: write
-    env:
-      REGISTRY: ghcr.io
-      BASE_IMAGE: alpine
+    outputs:
+      al_ver: ${{ steps.parse.outputs.al_ver }}
+      pd_ver: ${{ steps.parse.outputs.pd_ver }}
+      pd_nme: ${{ steps.parse.outputs.pd_nme }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to ghcr.io
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Parse ARGs from Dockerfile
-        id: prepare
+        id: parse
         shell: bash
         run: |
           if [ ! -f "Dockerfile" ]; then
@@ -58,18 +51,95 @@ jobs:
           echo "al_ver=${AL_VER}" >> $GITHUB_OUTPUT
           echo "pd_ver=${PD_VER}" >> $GITHUB_OUTPUT
           echo "pd_nme=${PD_NME}" >> $GITHUB_OUTPUT
-      - name: Build and Push Image
+  build:
+    name: Build and Push (${{ matrix.arch }})
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - arch: linux/amd64
+            runs-on: ubuntu-24.04
+          - arch: linux/arm64
+            runs-on: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runs-on }}
+    needs: prepare
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Normalize Architectures Tags
+        id: normalize
+        run: |
+          ARCH_TAG=$(echo "${{ matrix.arch }}" | xargs basename | tr -d '[:space:]')
+          echo "${ARCH_TAG}"
+          echo "arch_tag=${ARCH_TAG}" >> $GITHUB_OUTPUT
+      - name: Build and Push Image (${{ matrix.arch }})
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/amd64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ steps.prepare.outputs.pd_nme }}:${{ steps.prepare.outputs.pd_ver }}-${{ env.BASE_IMAGE }}${{ steps.prepare.outputs.al_ver }}
-      - name: Cleanup untagged images
-        uses: dataaxiom/ghcr-cleanup-action@v1
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_nme }}:${{ steps.normalize.outputs.arch_tag }}
+  merge:
+    name: Create and Push Multi-Arch Manifest
+    runs-on: ubuntu-24.04
+    needs: 
+      - prepare
+      - build
+    permissions:
+      packages: write
+    steps:
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create and Push Manifest linux/amd64, linux/arm64
+        run: |
+          docker buildx imagetools create \
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_nme }}:${{ needs.prepare.outputs.pd_ver }}-${{ env.BASE_IMAGE }}${{ needs.prepare.outputs.al_ver }} \
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_nme }}:amd64 \
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_nme }}:arm64
+  cleanup:
+    name: Cleanup Obsoleting Tags
+    runs-on: ubuntu-slim
+    needs: 
+      - prepare
+      - build
+      - merge
+    permissions:
+      packages: write
+    steps:
+      - name: Delete Intermediate Tags
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OWNER=${{ github.repository_owner }}
+          IMAGE=${{ needs.prepare.outputs.pd_nme }}
+          for TAG in amd64 arm64; do
+            VERSION_ID=$(gh api -H "Accept: application/vnd.github+json" \
+              /users/$OWNER/packages/container/$IMAGE/versions \
+              --jq ".[] | select(.metadata.container.tags[]? == \"$TAG\") | .id")
+            if [ -n "$VERSION_ID" ]; then
+              echo "Deleting $IMAGE:$TAG (version id $VERSION_ID)"
+              gh api \
+                --method DELETE \
+                -H "Accept: application/vnd.github+json" \
+                /users/$OWNER/packages/container/$IMAGE/versions/$VERSION_ID
+            fi
+          done
+      - name: Cleanup Untagged Images
+        uses: dataaxiom/ghcr-cleanup-action@v1
         with:
           delete-untagged: true
           owner: ${{ github.repository_owner }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          package: ${{ steps.prepare.outputs.pd_nme }}
+          package: ${{ needs.prepare.outputs.pd_nme }}
