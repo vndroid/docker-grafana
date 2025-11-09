@@ -21,17 +21,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      - name: Parse ARGs from Dockerfile
+      - name: Parse ARGs from Repository
         id: parse
         shell: bash
         run: |
-          if [ ! -f "Dockerfile" ]; then
+          if [ ! -f "ARGs" ]; then
             echo "Error: No such file or directory"
             exit 1
           fi
-          AL_VER=$(grep -E '^ARG AL_VER=' Dockerfile | head -n 1 | sed 's/^ARG AL_VER=\(.*\)/\1/')
-          PD_VER=$(grep -E '^ARG PD_VER=' Dockerfile | head -n 1 | sed 's/^ARG PD_VER=\(.*\)/\1/')
-          PD_NME=$(grep -E '^ARG PD_NME=' Dockerfile | head -n 1 | sed 's/^ARG PD_NME=\(.*\)/\1/')
+          AL_VER=$(grep -E '^ARG AL_VER=' ARGs | head -n 1 | sed 's/^ARG AL_VER=\(.*\)/\1/')
+          PD_VER=$(grep -E '^ARG PD_VER=' ARGs | head -n 1 | sed 's/^ARG PD_VER=\(.*\)/\1/')
+          PD_NME=$(grep -E '^ARG PD_NME=' ARGs | head -n 1 | sed 's/^ARG PD_NME=\(.*\)/\1/')
           # clean up values
           AL_VER=$(echo "$AL_VER" | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
           PD_VER=$(echo "$PD_VER" | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')

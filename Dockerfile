@@ -1,8 +1,4 @@
 # syntax=docker/dockerfile:1.19.0
-ARG AL_VER=3.21
-ARG PD_VER=12.2.0
-ARG PD_NME=grafana
-
 FROM golang:1.25-alpine3.21 AS go-builder
 
 ARG TARGETOS
