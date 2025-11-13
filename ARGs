@@ -1,3 +1,6 @@
-ARG AL_VER=3.21
-ARG PD_VER=12.2.0
-ARG PD_NME=grafana
+OS_ID=alpine
+OS_VER=3.21
+GO_VER=1.25
+NODE_VER=22
+PD_ID=grafana
+PD_VER=12.2.0
