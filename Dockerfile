@@ -6,7 +6,7 @@ ARG TARGETARCH
 ARG GO_BUILD_TAGS="oss"
 ARG WIRE_TAGS="oss"
 
-ENV VERSION=12.2.0
+ENV VERSION=12.3.0
 
 RUN set -eux \
     && apk add --no-cache binutils-gold bash gcc g++ make git binutils
@@ -23,7 +23,7 @@ RUN set -eux \
     && find /root -maxdepth 1 -type d -name ".*" ! -name "." ! -name ".." -exec rm -rf {} + \
     && rm -rf /go/pkg
 
-FROM node:22-alpine3.21 AS js-builder
+FROM node:24-alpine3.21 AS js-builder
 
 ARG JS_YARN_BUILD_FLAG=build
 
