@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1.19.0
-FROM golang:1.25-alpine3.21 AS go-builder
+FROM golang:1.25-alpine3.23 AS go-builder
 
 ARG TARGETOS
 ARG TARGETARCH
 ARG GO_BUILD_TAGS="oss"
 ARG WIRE_TAGS="oss"
 
-ENV VERSION=12.3.1
+ENV VERSION=12.3.2
 
 RUN set -eux \
     && apk add --no-cache binutils-gold bash gcc g++ make git binutils
@@ -23,7 +23,7 @@ RUN set -eux \
     && find /root -maxdepth 1 -type d -name ".*" ! -name "." ! -name ".." -exec rm -rf {} + \
     && rm -rf /go/pkg
 
-FROM node:24-alpine3.21 AS js-builder
+FROM node:24-alpine3.23 AS js-builder
 
 ARG JS_YARN_BUILD_FLAG=build
 
@@ -64,7 +64,7 @@ RUN set -eux \
     && yarn ${JS_YARN_BUILD_FLAG} \
     && find /root -maxdepth 1 -type d -name ".*" ! -name "." ! -name ".." -exec rm -rf {} +
 
-FROM alpine:3.21
+FROM alpine:3.23
 
 LABEL maintainer="Grafana Labs <hello@grafana.com>"
 LABEL org.opencontainers.image.source="https://github.com/grafana/grafana"
