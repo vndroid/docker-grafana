@@ -2,6 +2,8 @@ name: CI Build Grafana-OSS
 on:
   push:
     branches: ['main']
+    paths-ignore:
+      - '.github/workflows/**'
   schedule:
     - cron: '0 0 7 * *'
   workflow_dispatch:
