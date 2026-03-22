@@ -16,7 +16,7 @@ RUN set -eux \
 WORKDIR /tmp/grafana
 
 RUN set -eux \
-    && git clone -b v${VERSION} --depth 1 https://github.com/grafana/grafana.git . \
+    && git clone -b v${VERSION} --single-branch --depth=1 https://github.com/grafana/grafana.git . \
     && go mod download \
     && COMMIT_SHA=$(git rev-parse HEAD) \
     && BUILD_BRANCH=$(git rev-parse --abbrev-ref HEAD) \
