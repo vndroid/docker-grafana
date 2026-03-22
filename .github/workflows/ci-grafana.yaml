@@ -17,9 +17,11 @@ jobs:
     permissions:
       contents: read
     outputs:
-      al_ver: ${{ steps.parse.outputs.al_ver }}
+      os_id: ${{ steps.parse.outputs.os_id }}
+      pd_id: ${{ steps.parse.outputs.pd_id }}
+      os_ver: ${{ steps.parse.outputs.os_ver }}
+      go_ver: ${{ steps.parse.outputs.go_ver }}
       pd_ver: ${{ steps.parse.outputs.pd_ver }}
-      pd_nme: ${{ steps.parse.outputs.pd_nme }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -31,28 +33,28 @@ jobs:
             echo "Error: No such file or directory"
             exit 1
           fi
-          AL_VER=$(grep -E '^ARG AL_VER=' ARGs | head -n 1 | sed 's/^ARG AL_VER=\(.*\)/\1/')
-          PD_VER=$(grep -E '^ARG PD_VER=' ARGs | head -n 1 | sed 's/^ARG PD_VER=\(.*\)/\1/')
-          PD_NME=$(grep -E '^ARG PD_NME=' ARGs | head -n 1 | sed 's/^ARG PD_NME=\(.*\)/\1/')
-          # clean up values
-          AL_VER=$(echo "$AL_VER" | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
-          PD_VER=$(echo "$PD_VER" | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
-          PD_NME=$(echo "$PD_NME" | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
+          OS_ID=$(grep -E '^OS_ID=' ARGs | head -n 1 | sed 's/^OS_ID=\(.*\)/\1/' | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
+          PD_ID=$(grep -E '^PD_ID=' ARGs | head -n 1 | sed 's/^PD_ID=\(.*\)/\1/' | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
+          OS_VER=$(grep -E '^OS_VER=' ARGs | head -n 1 | sed 's/^OS_VER=\(.*\)/\1/' | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
+          GO_VER=$(grep -E '^GO_VER=' ARGs | head -n 1 | sed 's/^GO_VER=\(.*\)/\1/' | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
+          PD_VER=$(grep -E '^PD_VER=' ARGs | head -n 1 | sed 's/^PD_VER=\(.*\)/\1/' | sed 's/^[[:space:]"]*//;s/[[:space:]"]*$//')
           # check if values are empty
-          if [ -z "$AL_VER" ] || [ -z "$PD_VER" ] || [ -z "$PD_NME" ]; then
-            echo "AL_VER='${AL_VER}'"
-            echo "PD_VER='${PD_VER}'"
-            echo "PD_NME='${PD_NME}'"
+          if [ -z "$OS_ID" ] || [ -z "$PD_ID" ] || [ -z "$OS_VER" ] || [ -z "$GO_VER" ] || [ -z "$PD_VER" ]; then
+            echo "Error: One or more ARG values are empty"
             exit 1
           fi
           # echo results
-          echo "AL_VER='${AL_VER}'"
+          echo "OS_ID='${OS_ID}'"
+          echo "PD_ID='${PD_ID}'"
+          echo "OS_VER='${OS_VER}'"
+          echo "GO_VER='${GO_VER}'"
           echo "PD_VER='${PD_VER}'"
-          echo "PD_NME='${PD_NME}'"
           # set outputs
-          echo "al_ver=${AL_VER}" >> $GITHUB_OUTPUT
+          echo "os_id=${OS_ID}" >> $GITHUB_OUTPUT
+          echo "pd_id=${PD_ID}" >> $GITHUB_OUTPUT
+          echo "os_ver=${OS_VER}" >> $GITHUB_OUTPUT
+          echo "go_ver=${GO_VER}" >> $GITHUB_OUTPUT
           echo "pd_ver=${PD_VER}" >> $GITHUB_OUTPUT
-          echo "pd_nme=${PD_NME}" >> $GITHUB_OUTPUT
   build:
     name: Build and Push (${{ matrix.arch }})
     permissions:
@@ -88,7 +90,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_nme }}:${{ steps.normalize.outputs.arch_tag }}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_id }}:${{ steps.normalize.outputs.arch_tag }}
   merge:
     name: Create and Push Multi-Arch Manifest
     runs-on: ubuntu-24.04
@@ -107,9 +109,9 @@ jobs:
       - name: Create and Push Manifest linux/amd64, linux/arm64
         run: |
           docker buildx imagetools create \
-            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_nme }}:${{ needs.prepare.outputs.pd_ver }}-${{ env.BASE_IMAGE }}${{ needs.prepare.outputs.al_ver }} \
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_nme }}:amd64 \
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_nme }}:arm64
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_id }}:${{ needs.prepare.outputs.pd_ver }}-${{ env.BASE_IMAGE }}${{ needs.prepare.outputs.os_ver }} \
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_id }}:amd64 \
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_id }}:arm64
   cleanup:
     name: Cleanup Obsoleting Tags
     runs-on: ubuntu-slim
@@ -125,7 +127,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           OWNER=${{ github.repository_owner }}
-          IMAGE=${{ needs.prepare.outputs.pd_nme }}
+          IMAGE=${{ needs.prepare.outputs.pd_id }}
           for TAG in amd64 arm64; do
             VERSION_ID=$(gh api -H "Accept: application/vnd.github+json" \
               /users/$OWNER/packages/container/$IMAGE/versions \
@@ -144,4 +146,4 @@ jobs:
           delete-untagged: true
           owner: ${{ github.repository_owner }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          package: ${{ needs.prepare.outputs.pd_nme }}
+          package: ${{ needs.prepare.outputs.pd_id }}
