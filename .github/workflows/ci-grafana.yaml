@@ -24,11 +24,12 @@ jobs:
       go_ver: ${{ steps.parse.outputs.go_ver }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Parse ARGs from Repository
         id: parse
         shell: bash
         run: |
+          command -v bash || exit 1;
           if [ ! -f "Dockerfile" ]; then
             echo "Error: No such file or directory"
             exit 1
@@ -75,11 +76,11 @@ jobs:
     needs: prepare
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Login to ghcr.io
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
@@ -91,7 +92,7 @@ jobs:
           echo "${ARCH_TAG}"
           echo "arch_tag=${ARCH_TAG}" >> $GITHUB_OUTPUT
       - name: Build and Push Image (${{ matrix.arch }})
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_nme }}:${{ steps.normalize.outputs.arch_tag }}
@@ -105,7 +106,7 @@ jobs:
       packages: write
     steps:
       - name: Login to ghcr.io
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
