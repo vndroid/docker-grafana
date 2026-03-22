@@ -12,16 +12,14 @@ jobs:
     permissions:
       contents: read
       packages: write
-      attestations: read
     env:
       REGISTRY: ghcr.io
+      BASE_IMAGE: alpine
     steps:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-        with:
-          platforms: linux/amd64,linux/arm64
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to ghcr.io
@@ -65,4 +63,13 @@ jobs:
         with:
           platforms: linux/amd64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ steps.prepare.outputs.pd_nme }}:${{ steps.prepare.outputs.pd_ver }}-alpine${{ steps.prepare.outputs.al_ver }}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ steps.prepare.outputs.pd_nme }}:${{ steps.prepare.outputs.pd_ver }}-${{ env.BASE_IMAGE }}${{ steps.prepare.outputs.al_ver }}
+      - name: Cleanup untagged images
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          delete-untagged: true
+          owner: ${{ github.repository_owner }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          package: ${{ steps.prepare.outputs.pd_nme }}
