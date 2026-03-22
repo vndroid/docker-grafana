@@ -1,10 +1,12 @@
 # syntax=docker/dockerfile:1.19.0
 ARG AL_VER=3.21
 ARG PD_VER=12.2.0
-ARG PD_NAME=grafana
+ARG PD_NME=grafana
 
-FROM --platform=$BUILDPLATFORM golang:1.25-alpine3.21 AS go-builder
+FROM --platform=$TARGETPLATFORM golang:1.25-alpine3.21 AS go-builder
 
+ARG TARGETOS
+ARG TARGETARCH
 ARG GO_BUILD_TAGS="oss"
 ARG WIRE_TAGS="oss"
 
@@ -20,12 +22,12 @@ RUN set -eux \
     && go mod download \
     && COMMIT_SHA=$(git rev-parse HEAD) \
     && BUILD_BRANCH=$(git rev-parse --abbrev-ref HEAD) \
-    && make build-go GO_BUILD_TAGS=${GO_BUILD_TAGS} WIRE_TAGS=${WIRE_TAGS} \
-    && strip /tmp/grafana/bin/linux-amd64/grafana /tmp/grafana/bin/linux-amd64/grafana-cli /tmp/grafana/bin/linux-amd64/grafana-server \
+    && GOOS=$TARGETOS GOARCH=$TARGETARCH make build-go GO_BUILD_TAGS=${GO_BUILD_TAGS} WIRE_TAGS=${WIRE_TAGS} \
+    && strip /tmp/grafana/bin/linux-${TARGETARCH}/grafana /tmp/grafana/bin/linux-${TARGETARCH}/grafana-cli /tmp/grafana/bin/linux-${TARGETARCH}/grafana-server \
     && find /root -maxdepth 1 -type d -name ".*" ! -name "." ! -name ".." -exec rm -rf {} + \
     && rm -rf /go/pkg
-    
-FROM --platform=$BUILDPLATFORM node:22-alpine3.21 AS js-builder
+
+FROM --platform=$TARGETPLATFORM node:22-alpine3.21 AS js-builder
 
 ARG JS_YARN_BUILD_FLAG=build
 
@@ -66,13 +68,14 @@ RUN set -eux \
     && yarn ${JS_YARN_BUILD_FLAG} \
     && find /root -maxdepth 1 -type d -name ".*" ! -name "." ! -name ".." -exec rm -rf {} +
 
-FROM --platform=$BUILDPLATFORM alpine:3.21
+FROM --platform=$TARGETPLATFORM alpine:3.21
 
 LABEL maintainer="Grafana Labs <hello@grafana.com>"
 LABEL org.opencontainers.image.source="https://github.com/grafana/grafana"
 
 ARG GF_UID="472"
 ARG GF_GID="0"
+ARG TARGETARCH
 
 ENV PATH="/usr/share/grafana/bin:$PATH" \
     GF_PATHS_CONFIG="/etc/grafana/grafana.ini" \
