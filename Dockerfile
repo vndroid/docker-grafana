@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.19.0
+# syntax=docker/dockerfile:1.21.0
 FROM golang:1.25-alpine3.23 AS go-builder
 
 ARG TARGETOS
@@ -6,7 +6,7 @@ ARG TARGETARCH
 ARG GO_BUILD_TAGS="oss"
 ARG WIRE_TAGS="oss"
 
-ENV VERSION=12.3.5
+ENV VERSION=12.3.6
 
 RUN set -eux \
     && apk add --no-cache binutils-gold bash gcc g++ make git binutils
