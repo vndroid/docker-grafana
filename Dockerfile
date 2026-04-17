@@ -6,7 +6,7 @@ ARG TARGETARCH
 ARG GO_BUILD_TAGS="oss"
 ARG WIRE_TAGS="oss"
 
-ENV VERSION=12.4.2
+ENV VERSION=12.4.3
 
 RUN set -eux \
     && apk add --no-cache binutils-gold bash gcc g++ make git binutils
@@ -19,7 +19,7 @@ RUN set -eux \
     && COMMIT_SHA=$(git rev-parse HEAD) \
     && BUILD_BRANCH=$(git rev-parse --abbrev-ref HEAD) \
     && GOOS=$TARGETOS GOARCH=$TARGETARCH make build-go GO_BUILD_TAGS=${GO_BUILD_TAGS} WIRE_TAGS=${WIRE_TAGS} \
-    && strip /tmp/grafana/bin/linux-${TARGETARCH}/grafana /tmp/grafana/bin/linux-${TARGETARCH}/grafana-cli /tmp/grafana/bin/linux-${TARGETARCH}/grafana-server \
+    && strip /tmp/grafana/bin/linux/${TARGETARCH}/grafana /tmp/grafana/bin/linux/${TARGETARCH}/grafana-cli /tmp/grafana/bin/linux/${TARGETARCH}/grafana-server \
     && find /root -maxdepth 1 -type d -name ".*" ! -name "." ! -name ".." -exec rm -rf {} + \
     && rm -rf /go/pkg
 
@@ -27,8 +27,8 @@ FROM node:24-alpine3.23 AS js-builder
 
 ARG JS_YARN_BUILD_FLAG=build
 
-ENV NODE_ENV=production
-ENV NODE_OPTIONS=--max_old_space_size=8000
+ENV NODE_ENV="production"
+ENV NODE_OPTIONS="--max_old_space_size=8000"
 
 WORKDIR /tmp/grafana
 
@@ -134,7 +134,7 @@ RUN if [ ! $(getent group "$GF_GID") ]; then \
     chown -R "grafana:$GF_GID_NAME" "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" "$GF_PATHS_PROVISIONING" && \
     chmod -R 777 "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" "$GF_PATHS_PROVISIONING"
 
-COPY --from=go-builder /tmp/grafana/bin/*/grafana /tmp/grafana/bin/*/grafana-cli /tmp/grafana/bin/*/grafana-server ./bin/
+COPY --from=go-builder /tmp/grafana/bin/linux/*/grafana /tmp/grafana/bin/linux/*/grafana-cli /tmp/grafana/bin/linux/*/grafana-server ./bin/
 COPY --from=go-builder /tmp/grafana/packaging/docker/run.sh /usr/local/bin/
 COPY --from=js-builder /tmp/grafana/public ./public
 COPY --chown=root:root --chmod=755 docker-entrypoint.sh /usr/local/bin/
