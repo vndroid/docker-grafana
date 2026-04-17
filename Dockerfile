@@ -6,7 +6,7 @@ ARG TARGETARCH
 ARG GO_BUILD_TAGS="oss"
 ARG WIRE_TAGS="oss"
 
-ENV VERSION=12.4.3
+ENV VERSION=13.0.0
 
 RUN set -eux \
     && apk add --no-cache binutils-gold bash gcc g++ make git binutils
@@ -19,7 +19,7 @@ RUN set -eux \
     && COMMIT_SHA=$(git rev-parse HEAD) \
     && BUILD_BRANCH=$(git rev-parse --abbrev-ref HEAD) \
     && GOOS=$TARGETOS GOARCH=$TARGETARCH make build-go GO_BUILD_TAGS=${GO_BUILD_TAGS} WIRE_TAGS=${WIRE_TAGS} \
-    && strip /tmp/grafana/bin/linux/${TARGETARCH}/grafana /tmp/grafana/bin/linux/${TARGETARCH}/grafana-cli /tmp/grafana/bin/linux/${TARGETARCH}/grafana-server \
+    && strip $(scanelf --nobanner -E ET_DYN -E ET_EXEC /tmp/grafana/bin/${TARGETOS}/${TARGETARCH}/grafana* | awk '{print $2}') \
     && find /root -maxdepth 1 -type d -name ".*" ! -name "." ! -name ".." -exec rm -rf {} + \
     && rm -rf /go/pkg
 
