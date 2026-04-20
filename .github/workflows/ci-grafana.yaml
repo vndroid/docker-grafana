@@ -98,6 +98,8 @@ jobs:
         with:
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.au_name }}:${{ steps.normalize.outputs.arch_tag }}
+          cache-from: type=gha,scope=${{ needs.prepare.outputs.au_name }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ needs.prepare.outputs.au_name }}-${{ matrix.arch }}
   merge:
     name: Create and Push Multi-Arch Manifest
     runs-on: ubuntu-24.04
