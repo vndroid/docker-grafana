@@ -1,0 +1,30 @@
+name: Purge Action Cache
+on:
+  workflow_dispatch:
+permissions:
+  actions: write
+  contents: read
+jobs:
+  purge:
+    name: Purge All Caches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Purge Action Cache
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const caches = await github.rest.actions.getActionsCacheList({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            for (const cache of caches.data.actions_caches) {
+              console.log(`Deleting cache: ${cache.key}`);
+              await github.rest.actions.deleteActionsCacheById({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                cache_id: cache.id,
+              });
+            }
+            
+            console.log(`Total caches deleted: ${caches.data.actions_caches.length}`);
