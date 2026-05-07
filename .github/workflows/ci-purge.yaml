@@ -13,18 +13,34 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
-            const caches = await github.rest.actions.getActionsCacheList({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
+            let page = 1;
+            let totalDeleted = 0;
+            let hasMore = true;
             
-            for (const cache of caches.data.actions_caches) {
-              console.log(`Deleting cache: ${cache.key}`);
-              await github.rest.actions.deleteActionsCacheById({
+            while (hasMore) {
+              const caches = await github.rest.actions.getActionsCacheList({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                cache_id: cache.id,
+                per_page: 100,
+                page: page,
               });
+              
+              if (caches.data.actions_caches.length === 0) {
+                hasMore = false;
+                break;
+              }
+              
+              for (const cache of caches.data.actions_caches) {
+                console.log(`Deleting cache: ${cache.key}`);
+                await github.rest.actions.deleteActionsCacheById({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  cache_id: cache.id,
+                });
+                totalDeleted++;
+              }
+              
+              page++;
             }
             
-            console.log(`Total caches deleted: ${caches.data.actions_caches.length}`);
+            console.log(`Total caches deleted: ${totalDeleted}`);
