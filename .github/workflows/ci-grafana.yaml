@@ -2,8 +2,9 @@ name: CI Build Grafana-OSS
 on:
   push:
     branches: ['main']
-    paths-ignore:
-      - '.github/workflows/**'
+    paths:
+      - 'Dockerfile'
+      - 'docker-entrypoint.sh'
   schedule:
     - cron: '0 0 7 * *'
   workflow_dispatch:
