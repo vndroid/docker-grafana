@@ -8,6 +8,8 @@
 
 ## 可用标签
 
+- [13.0.6-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.6-alpine3.23)
+
 - [13.0.5-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.5-alpine3.23)
 
 - [13.0.4-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.4-alpine3.23)
@@ -27,21 +29,5 @@
 - [12.4.1-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/803807822?tag=12.4.1-alpine3.23)
 
 - [12.4.0-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/803770457?tag=12.4.0-alpine3.23)
-
-- [12.3.6-security-01-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/782341815?tag=12.3.6-security-01-alpine3.23)
-
-- [12.3.6-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/772836015?tag=12.3.6-alpine3.23)
-
-- [12.3.5-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/737560648?tag=12.3.5-alpine3.23)
-
-- [12.3.4-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/714656155?tag=12.3.4-alpine3.23)
-
-- [12.3.3-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/714579955?tag=12.3.3-alpine3.23)
-
-- [12.3.2-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/675272540?tag=12.3.2-alpine3.23)
-
-- [12.3.1-alpine3.21](https://github.com/users/vndroid/packages/container/grafana/656930993?tag=12.3.1-alpine3.21)
-
-- [12.3.0-alpine3.21](https://github.com/users/vndroid/packages/container/grafana/632626774?tag=12.3.0-alpine3.21)
 
 - [12.2.0-alpine3.21](https://github.com/users/vndroid/packages/container/grafana/575694746?tag=12.2.0-alpine3.21)
