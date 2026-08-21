@@ -8,6 +8,8 @@
 
 ## 可用标签
 
+- [13.0.7-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.7-alpine3.23)
+
 - [13.0.6-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.6-alpine3.23)
 
 - [13.0.5-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.5-alpine3.23)
