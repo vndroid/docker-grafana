@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.21.0
 FROM golang:1.26-alpine3.23 AS go-builder
 
 ARG TARGETOS
@@ -6,7 +5,7 @@ ARG TARGETARCH
 ARG GO_BUILD_TAGS="oss"
 ARG WIRE_TAGS="oss"
 
-ENV VERSION=13.0.7
+ENV VERSION=13.2.0
 
 RUN set -eux \
     && apk add --no-cache binutils-gold bash gcc g++ make git binutils
@@ -26,6 +25,7 @@ RUN set -eux \
 FROM node:24-alpine3.23 AS js-builder
 
 ARG JS_YARN_BUILD_FLAG=build
+ARG JS_YARN_INSTALL_FLAG=--immutable
 
 ENV NODE_ENV="production"
 ENV NODE_OPTIONS="--max_old_space_size=8000"
@@ -47,10 +47,13 @@ COPY --from=go-builder /tmp/grafana/e2e-playwright e2e-playwright
 COPY --from=go-builder /tmp/grafana/public public
 COPY --from=go-builder /tmp/grafana/LICENSE ./
 COPY --from=go-builder /tmp/grafana/conf/defaults.ini ./conf/defaults.ini
-COPY --from=go-builder /tmp/grafana/e2e e2e
 
 RUN set -eux \
-    && yarn install --immutable
+    && if [ "$JS_YARN_INSTALL_FLAG" = "" ]; then \
+        yarn install; \
+    else \
+        yarn install --immutable; \
+    fi
 
 COPY --from=go-builder /tmp/grafana/tsconfig.json ./
 COPY --from=go-builder /tmp/grafana/eslint.config.js ./
@@ -92,7 +95,7 @@ RUN set -eux \
 ARG GLIBC_VERSION=2.40
 
 RUN if grep -i -q alpine /etc/issue && [ `arch` = "x86_64" ]; then \
-    wget -qO- "https://dl.grafana.com/glibc/glibc-bin-$GLIBC_VERSION.tar.gz" | tar zxf - -C / \
+    curl -fsSL "https://dl.grafana.com/glibc/glibc-bin-$GLIBC_VERSION.tar.gz" | tar zxf - -C / \
     usr/glibc-compat/lib/ld-linux-x86-64.so.2 \
     usr/glibc-compat/lib/libc.so.6 \
     usr/glibc-compat/lib/libdl.so.2 \
@@ -128,16 +131,20 @@ RUN if [ ! $(getent group "$GF_GID") ]; then \
     "$GF_PATHS_PROVISIONING/alerting" \
     "$GF_PATHS_LOGS" \
     "$GF_PATHS_PLUGINS" \
+    "$GF_PATHS_HOME/data/plugins-bundled" \
     "$GF_PATHS_DATA" && \
     cp conf/sample.ini "$GF_PATHS_CONFIG" && \
     cp conf/ldap.toml /etc/grafana/ldap.toml && \
-    chown -R "grafana:$GF_GID_NAME" "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" "$GF_PATHS_PROVISIONING" && \
-    chmod -R 777 "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" "$GF_PATHS_PROVISIONING"
+    chown -R "grafana:$GF_GID_NAME" "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" "$GF_PATHS_PROVISIONING" "$GF_PATHS_HOME/data/plugins-bundled" && \
+    chmod -R 777 "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" "$GF_PATHS_PROVISIONING" "$GF_PATHS_HOME/data/plugins-bundled"
 
 COPY --from=go-builder /tmp/grafana/bin/linux/*/grafana /tmp/grafana/bin/linux/*/grafana-cli /tmp/grafana/bin/linux/*/grafana-server ./bin/
 COPY --from=go-builder /tmp/grafana/packaging/docker/run.sh /usr/local/bin/
 COPY --from=js-builder /tmp/grafana/public ./public
 COPY --chown=root:root --chmod=755 docker-entrypoint.sh /usr/local/bin/
+
+RUN grafana server -v | sed -e 's/Version //' > /.grafana-version
+RUN chmod 644 /.grafana-version
 
 EXPOSE 3000
 
