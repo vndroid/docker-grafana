@@ -6,30 +6,10 @@
 
 本项目提供了一个完整的 Docker 构建配置，用于轻松部署和运行 Grafana 可视化平台。Grafana 是一个开源的度量分析和可视化套件，常用于监控和分析应用程序性能。
 
-## 可用标签
+## 最新标签
 
-- [13.0.7-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.7-alpine3.23)
+- [13.2.2-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.2.2-alpine3.23)
 
-- [13.0.6-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.6-alpine3.23)
+## 历史标签
 
-- [13.0.5-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.5-alpine3.23)
-
-- [13.0.4-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.4-alpine3.23)
-
-- [13.0.3-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.3-alpine3.23)
-
-- [13.0.2-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.2-alpine3.23)
-
-- [13.0.1-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.0.1-alpine3.23)
-
-- [13.0.0-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/804251672?tag=13.0.0-alpine3.23)
-
-- [12.4.3-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/804087968?tag=12.4.3-alpine3.23)
-
-- [12.4.2-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/803850999?tag=12.4.2-alpine3.23)
-
-- [12.4.1-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/803807822?tag=12.4.1-alpine3.23)
-
-- [12.4.0-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/803770457?tag=12.4.0-alpine3.23)
-
-- [12.2.0-alpine3.21](https://github.com/users/vndroid/packages/container/grafana/575694746?tag=12.2.0-alpine3.21)
+可在 [所有可用版本](https://github.com/vndroid/docker-grafana/pkgs/container/grafana/versions?filters%5Bversion_type%5D=tagged) 中查看
