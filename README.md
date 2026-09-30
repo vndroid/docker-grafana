@@ -8,7 +8,7 @@
 
 ## 最新标签
 
-- [13.2.2-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.2.2-alpine3.23)
+- [13.2.3-alpine3.23](https://github.com/users/vndroid/packages/container/grafana/810060371?tag=13.2.3-alpine3.23)
 
 ## 历史标签
 

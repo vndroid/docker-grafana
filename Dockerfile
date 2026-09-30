@@ -5,7 +5,7 @@ ARG TARGETARCH
 ARG GO_BUILD_TAGS="oss"
 ARG WIRE_TAGS="oss"
 
-ENV VERSION=13.2.2
+ENV VERSION=13.2.3
 
 RUN set -eux \
     && apk add --no-cache binutils-gold bash gcc g++ make git binutils
