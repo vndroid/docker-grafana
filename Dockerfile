@@ -1,11 +1,11 @@
-FROM golang:1.26-alpine3.23 AS go-builder
+FROM golang:1.27-alpine3.23 AS go-builder
 
 ARG TARGETOS
 ARG TARGETARCH
 ARG GO_BUILD_TAGS="oss"
 ARG WIRE_TAGS="oss"
 
-ENV VERSION=13.2.5
+ENV VERSION=13.3.0
 
 RUN set -eux \
     && apk add --no-cache binutils-gold bash gcc g++ make git binutils
@@ -87,7 +87,7 @@ ENV PATH="/usr/share/grafana/bin:$PATH" \
 WORKDIR $GF_PATHS_HOME
 
 RUN set -eux \
-    && apk add --no-cache ca-certificates bash curl tzdata musl-utils \
+    && apk add --no-cache ca-certificates bubblewrap curl tzdata musl-utils \
     && apk info -vv | sort;
 
 # glibc support for alpine x86_64 only
